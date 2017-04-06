@@ -5,4 +5,4 @@ I started this blog as a way of learning JavaScript in greater detail than what 
 
 I will also write about Reactjs and Redux (because I love React) and aim to go levels deeper than what might be needed to make a simple React app.
 
-My motto: The details matter!
+My motto: _The details matter!_
