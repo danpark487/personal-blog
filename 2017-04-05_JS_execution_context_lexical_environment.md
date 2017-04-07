@@ -60,7 +60,7 @@ Second, the __LexicalEnvironment__ State Component...
 
 I think it is helpful to think about why this is important. In short, one has to wonder, how does the machine know where to look for all the variables declared in the code? The ```LexicalEnvironment``` is where this "identifier resolution" happens!
 
-The official ES5 docs define Lexical Environment (an abstract concept really) as the place where "the association of Identifiers to specific variables and functions based upon the lexical nesting structure of ECMAScript code" is stored. Jargon aside, there are two main takeaways from this definition:
+The official ES5 docs defines Lexical Environment (an abstract concept really) as the place where "the association of Identifiers to specific variables and functions based upon the lexical nesting structure of ECMAScript code" is stored. Jargon aside, there are two main takeaways from this definition:
   1. __Identifier associations__ are simply the _binding_ between variable and function declarations with their values. (e.g., ```let x = 10```, 'x' is bound to '10').
   2. __Lexical structure__ is just describing the actual location where the code was written. _See below_.
   ```javascript
@@ -76,7 +76,7 @@ The official ES5 docs define Lexical Environment (an abstract concept really) as
 
 Now, _within_ this Lexical Environment are two components: (1) the __environment record__ and (2) a __reference to the outer environment__.
   1. The _environment record_ is the place where the variable and function declarations are stored.
-  2. The reference to the outer environment is the way in which the machine conducts identifier resolution (scope).
+  2. The _reference to the outer environment_ is the way in which the machine conducts identifier resolution (scope).
   
   * In the _global_ lexical environment, one should expect the built-in Object/Array/etc. prototype functions inside this environment record as well as any user-defined global variables. And the reference to the outer environment would be set to ```null``` (as it is the outermost environment).
 
