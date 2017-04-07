@@ -35,6 +35,8 @@ To understand how JavaScript handles its evaluation strategy, one has to underst
 Primitives include: (1) booleans, (2) null, (3) undefined, (4) numbers, (5) strings, (6) symbols (ES6).
 Out of the seven data types in JS, six are considered primitives. That just means that __objects__ are a reference type (i.e., this includes functions and arrays because in JS, those are also objects).
 
+__An important note:__ primitives in JavaScript are immutable; while objects are mutable. This will play a part in how evaluation strategy works.
+
 The data type is important to consider because there is a slightly different evaluation strategy applied to primitives from reference types.
 
 ##By Value vs. By Reference
@@ -73,14 +75,16 @@ function changeObject(obj) {
 changeObject(a);
 console.log(a); // now { baz: 30 }!
 ```
-* An illustrative example: Imagine you are driving a car to a particular location. The car is the object in this case, and your driving is the function executed on the car to direct its steps. In a __call by reference__ paradigm, _any_ decision you make while driving will alter the "state"/position of the car relative to where it was before. Because the driving is acting on the same object (the car) and not a copy of that object (as in the __by value__ paradigm), changes are always reflected on the object.
+* An illustration of object mutation: Imagine you are driving a car to a particular location. The car is the object in this case, and your driving is the function executed on the car to direct its steps. In a call by reference paradigm, any decision you make while driving will alter the “state”/position of the car relative to where it was before. Because the driving is acting on the same object (the car) and not a copy of that object (as in the by value paradigm), changes are always reflected on the object.
+
+* Same illustration (re-assignment): Same driver/car scenario. If you switch cars along the way, the old car is gone. Your new car is what you have at that memory moving forward.
 
 * Yet another example, more abstract: Think of a pointer being directed at the actual memory address (the reference!) of the arguments passed into the function. Changes made inside the function would be modifying the data at that address. 
 
 While this is all very interesting, as we saw in Examples 1 and 2, and probably in personal experience, we know that data is not passed by reference in JavaScript.
 
 ##JavaScript: which is it?
-In short, everything in JavaScript is passed by value technically. But the long answer is far trickier.
+In short, everything in JavaScript is passed by some sort of value. But the long answer is far trickier.
 You might have heard something like, "In JavaScript, primitive data types are passed by value while reference types, objects, are passed by reference." That's technically incorrect!
 
 This confusion arises from the example below:
@@ -120,24 +124,21 @@ console.log(b); // 10
 ```
 There is nothing you can do to `a` that will change `b` unless by directly changing/re-assigning `b` itself!
 
-Objects are a bit special. It takes a varied amount of memory space, which is why objects are stored in a heap. Variables assigned to _primitive values_ have direct access to the value in the memory stack. Whereas variables with _reference types_ are actually an assignment to a copy of the reference, address, pointer (whatever) to the exact location where the object is stored in the heap. Whew!
-
-* Illustration: Imagine two notes on desk, one representing a variable assignment for a primitive, the other a variable assignment for a reference type. The first, the primitive, answers the question: What day is it? It has the answer right on it (Thursday). The second, the object, can answer the same question but indirectly. It will lay out step-by-step directions (e.g., 1. turn on computer, 2. check Date & Time, etc.) on how to get that information. Naturally a computer computes those directions pretty much instantly but there is a subtle difference!
-
-This distinction means that if __ALL__ data is passed __by value__ (as I have claimed above), then it is because the value for object assignments are actually merely a "copy" of that reference, the address copy where the object is located in the memory. 
+For objects, however, the value that is being passed in is a copy of the reference to that object (memory address).
 
 __A copy is made, it just isn't the whole object itself as it is with primitives, just the reference.__
 
 It is under _this_ definition of __value__ where some astute JavaScript scholars (heh) have said, "All data in JavaScript is passed by value!" The copy being made is just simply the reference to the object.
 
 ##The Twirl
-Haha, if you had the patience to read this far, you probably have noticed that I just twirled you around a few times and said, "See, JavaScript objects are NOT passed by reference!" through some semantic gymnastics. 
+Haha, if you had the patience to read this far, you probably have noticed that I just twirled you around a few times and said, “See, JavaScript objects are NOT passed by reference!” through some word gymnastics. 
 
 In reality, much of the discussion surrounding this topic comes down to semantics. I have yet to find an example of a programming language that is strictly __pass by value__ under the classical definition (complete copy of underlying value) or even strictly __pass by reference__ (all variable references modify the underlying value). It seems a bit inefficient to imagine the former in a language while almost silly to do the same for the latter (error prone!).
 
 We have to remember that these evaluation "strategies" are actually abstract descriptions, much like an Abstract Data Type (ADTs), that are helpful in understanding contrasting concepts. The actual implementation is a bit more nuanced.
-
-In JavaScript, there are two concepts that is worth thinking about to reconcile the problem concerning __objects__: the behavior of reference types (objects) seem to depend on whether the object is reassigned or its inner properties _mutated_.
+---
+##Immutability
+In JavaScript, there are two concepts that is worth thinking about to reconcile the problem concerning __objects__: the behavior of reference types (objects) seem to depend on whether the object is _reassigned_ or its inner properties _mutated_.
 
 Two concepts:
 1. __Rebinding__
@@ -151,13 +152,15 @@ These dual concepts explain why Examples 4 and 5 produce seemingly inconsistent 
 * However, in Example 5, the object is directly mutated. As we said above, because the `obj` variable in `changeObject(obj)` is "pointing" (via a copy of the address) to the same object as `a` and `b`, a direct mutation to `obj` would affect `a` and `b` who are both also pointing to that object. It is because of this idea that some call this interaction, [call by sharing](https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_sharing) (the lesser known evaluation strategy), because all the "pointers" are directed at the same object.
 
 ##Summary
-A lot of this discussion comes down to semantics as always. It is the tricky line in trying to fit an implementation into a neat abstract category. As such, it would be unfair to say that JavaScript is simply inconsistent. It simply functions this way. Objects are special values that are passed in a slightly different way than primitives. 
+A lot of this discussion comes down to semantics as always. It is the tricky line in trying to fit an implementation into a neat abstract category. As such, it would be unfair to say that JavaScript is inconsistent. It simply functions this way. Objects are special, __mutable__ values that are passed in a slightly different way than primitives.
 
-Therefore, it would be technically correct to say, "All data types are passed by value in JavaScript... where the "value" for an object is a copy of the reference to that object, not the object itself."
+Passing objects behaves as if it had been passed __by reference__ but only when the object is being mutated (not re-assigned). So it would be inaccurate to simply state: “Objects are passed by reference.” That’s implies more than what actually happens. On the other hand, to say objects are passed __by value__ is also a misnomer because that typically means a copy of that object is created at another memory address — which isn’t what is happening either!
 
-Or you could simply say, "In JavaScript, primitives are passed by value, whereas objects are passed by sharing."
+Therefore, it would only be technically correct to say, “All data types are passed by value in JavaScript… where the “value” for an object is a copy of the reference to that object, not the object itself.”
 
-The inaccuracies would only exist where the abstract concepts of "pass by value" or "pass by reference" have not been tinkered with thoroughly to mean what is actually happening.
+Or you could simply say, “In JavaScript, primitives are passed by value, whereas objects are passed by sharing.” Because in sharing, you can always rebind to some other object without altering all the other variables pointing to that object.
+
+In conclusion, the inaccuracies would only exist where the abstract concepts of “pass by value” or “pass by reference” have not been qualified to explain the actual implementation.
 
 __Read more:__
 * [Dmitry Soshnikov on Evaluation Strategy](http://dmitrysoshnikov.com/ecmascript/chapter-8-evaluation-strategy/)
