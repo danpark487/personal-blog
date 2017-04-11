@@ -1,4 +1,4 @@
-## Javascript Basics: The Execution Context and the Lexical Environment
+## JavaScript Basics: The Execution Context and the Lexical Environment
 ###### _What is actually happening when code is executed/functions are invoked?_
 
 A lot of the magic of code happens behind-the-scenes where the code is being compiled and interpreted.

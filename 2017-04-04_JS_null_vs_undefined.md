@@ -1,4 +1,4 @@
-## Javascript Basics: Null vs. Undefined!
+## JavaScript Basics: Null vs. Undefined!
 
 * __undefined__ - the __default__ primitive value of declared variables that have not yet been assigned a value (either in the code or during the creation phase of the execution context)
 * __null__ - an __assigned__ primitive value (by someone) to indicate an empty value // never a default value

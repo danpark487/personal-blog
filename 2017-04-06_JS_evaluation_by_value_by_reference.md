@@ -1,4 +1,4 @@
-#Javascript Basics: Evaluation Strategy: by value vs. by reference
+#JavaScript Basics: Evaluation Strategy: by value vs. by reference
 ######_variable assignment and function calls -- rebinding and mutation_
 
 A language's __evaluation strategy__ is the set of rules governing __when__ to evaluate the arguments of the function and __what__ value to pass into a function call. In this post, we will be focusing on the latter -- __what__ value is actually passed in?
