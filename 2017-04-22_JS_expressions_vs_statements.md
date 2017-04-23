@@ -102,7 +102,7 @@ Code:
 +;    // SyntaxError! (it expects something after it)
 +10;  // 10, now this is an expression using the unary plus operator
 ```
-An __expression__ doesn't necessarily _need_ an operator (`a` is an expression by itself), but even the most simple pieces of code will have them. Just be aware that they can be used to compose more "complex" expressions.
+An __expression__ doesn't necessarily _need_ an operator (`a` is an expression by itself), but even the most simple pieces of code will have them. Just be aware that they can be used to compose more "complex" expressions. There are so much more you can talk about with operators such as _operator precedence_ and the specific definitions of the many operators available, however, this is enough to understand its relevance to this topic on expressions.
 
 __Statements__
 Continuing with the English language analogy (imperfect as it may be), __statements__ are the sentences of JavaScript. But imagine if you were only allowed to say or write a predetermined number of sentence types. This predetermined number is far less than the number of valid kinds of English sentences obviously. But even in English, this number is limited. I cannot just say "the slowly man here running" and expect people to understand. Remember, even if we might understand that sentence as humans, computers follow strict rules. We cannot just chain some JavaScript expressions together and expect the computer to execute the code as you had intended.
