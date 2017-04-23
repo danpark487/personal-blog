@@ -52,7 +52,7 @@ function foo() {
   console.log(a);   // ReferenceError: a is not defined!
 }
 ```
-The reason why `b` is "remembered" is because `b` was never bound to the `LexicalEnvironment`. Instead, it was bound to the Execution Context's `VariableEnvironment`. Pre-ES6, there was no distinction between the two Lexical Enviroments; however, now, `var` statements are bound to the `VariableEnvironment` for `var`-identifier resolution. This is obviously because `var` is still scoped at the function level.
+The reason why `b` is "remembered" is because `b` was never bound to the `LexicalEnvironment`. Instead, it was bound to the Execution Context's `VariableEnvironment`. Pre-ES6, there was no distinction between the two Lexical Environments; however, now, `var` statements are bound to the `VariableEnvironment` for `var`-identifier resolution. This is obviously because `var` is still scoped at the function level.
 
 Again, remember, for __lexically scoped declarations__ (`let` and `const`), identifier resolution allows scope chain lookup as usual _as long as_ the block has not yet been exited (i.e., leaving the current `LexicalEnvironment`). This is why inner blocks can access `let` and `const` declarations outside its block. However, you cannot access declarations _inside a block_ from the outside looking in. 
 
