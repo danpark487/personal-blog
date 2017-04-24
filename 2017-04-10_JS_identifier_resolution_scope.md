@@ -1,173 +1,90 @@
-##JavaScript Basics: Identifier Resolution and Scope with ES6 (block scope)!
-######_Scope Chain, `let` and `const`, and TDZ more...
+##JavaScript Basics: Identifier Resolution and Scope!
 
 __Note:__ I recommend reading my previous blog post on [JavaScript Execution Context and Lexical Environments](https://medium.com/dailyjs/javascript-basics-the-execution-context-and-the-lexical-environment-3505d4fe1be2) first.
 
-It isn't really difficult to conceptualize how variable declarations and their assignments are resolved in JavaScript. We actually take for granted that pre-ES6, that variables were almost exclusively "function scoped" (the other side being scoped globally). If a variable was set anywhere in the function (e.g., inside a `for` loop or an `if` statement), that variable would be accessible within that function. As mentioned in my previous blog post, this is because _identifiers_ are resolved through the `LexicalEnvironment`'s environment record.
+It isn't really difficult to conceptualize how variable declarations and their assignments are resolved in JavaScript.  As mentioned in my [previous blog post](https://medium.com/dailyjs/javascript-basics-the-execution-context-and-the-lexical-environment-3505d4fe1be2), this is because _identifiers_ are resolved through the `LexicalEnvironment`'s environment record. __Identifiers__ are variables that we assign values or references to. For example, in `var x = 10`, `x` is an identifier. Once a variable has been declared (i.e., an identifier is assigned some value), when that variable is used anywhere in your code, it goes through a process called __identifier resolution__.
 
-##Identifier Resolution/Scope Chain
+##Identifier Resolution
+__Definition first:__ __Identifier resolution__ is the machine process that returns the value of a variable by looking up the scope chain.
+
 In the [ES6 specifications](https://www.ecma-international.org/ecma-262/7.0/#sec-getidentifierreference), identifier resolution is accomplished through the formulaic `GetIdentifierReference` function. This "function" is obviously not exposed and is defined as an "abstract operation." 
 
-We won't actually go through the "function" step-by-step. However, it is worth noting that because the Lexical Environments (i.e., `LexicalEnvironment` and `VariableEnvironment`) of the current Execution Context has not only the environment record(_envRec_), but also a __reference to the outer__ Lexical Environment (__outer__), `GetIdentifierReference` is a recursive operation checking not only it's own _envRec_ but also every surrounding Lexical Environment until the __outer__ is `null` or the identifier is found. This is the essence of what some call the __scope chain__.
+We won't actually go through the "function" step-by-step. However, it is worth noting that because the Lexical Environments (i.e., `LexicalEnvironment` and `VariableEnvironment`) of the current Execution Context has not only the environment record(_envRec_), but also a __reference to the outer__ Lexical Environment (__outer__), `GetIdentifierReference` is a recursive operation checking not only it's own _envRec_ but also every surrounding Lexical Environment until the __outer__ is `null` or the identifier is found. The "chain" of Lexical Environment records is the __scope chain__.
 
-__Important__: It may be confusing to refer to both the "Lexical Environment" (observe the space between the two words) and `LexicalEnvironment` (no space). I wrote this to be consistent with the ECMAScript specs. __Lexical Environment__ is the concept, `LexicalEnvironment` and `VariableEnvironment` are the implementation of that concept.
-
-Essentially, the check for the identifier propagates outward from the current Lexical Environment until it finds (or does not find) the variable.
-
-Before ES6, checking the `LexicalEnvironment` for identifier resolution accomplished identifier resolution. But with the advent of block scoping (using the `let` and `const` keywords), a not-so-small nuance was added on top of this.
-
-##Block Scope
-Block scope is not an unfamiliar concept to those who come from other languages (C++, Java, Perl, etc.). However, in JavaScript, it was made available through the `let` and `const` keywords in ES6.
-
-In short, __block scoped__ variables are accessible anywhere within the _block_ but not outside it.
-
-To understand that definition, it is helpful to understand what a "block" is. Quite simply, a __block__ is anything within curly braces: {}.
-
-See below:
-```javascript
-function foo() {  // start Block1
-  if (...) {      // start Block2
-    //...
-    for(...) {    // start Block3
-      //...
-    }             // end Block3
-  }               // end Block2
-}                 // end Block1
-```
-
-As you can see, blocks can be nested (and quite often so). The important aspect of block scoping and how it affects identifier resolution is that as the code is being run line-by-line, when it encounters a block, it enters into a _new_ `LexicalEnvironment`. When it leaves the block, it goes back to the _surrounding_ `LexicalEnvironment`. [See here] (https://www.ecma-international.org/ecma-262/7.0/#sec-block-runtime-semantics-evaluation).
-
-Within this newly created `LexicalEnvironment`, a _declarative Environment Record_ is created (remember this?). The abstract operation for this procedure is called `BlockDeclarationInstantiation` ([ECMAScript 13.2.14](https://www.ecma-international.org/ecma-262/7.0/#sec-blockdeclarationinstantiation)). It is within _this_ environment record that our soon-to-be-introduced `let` and `const` keywords are bound.
-
-__Food for thought__: What happens when both `let` and `var` is used within the same block? How does `var` persist outside the block scope if upon leaving the block, it exits the `LexicalEnvironment`?
-
-Check out the code below:
+Check the code below:
 ```javascript
 function foo() {
-  if (...) {
-    let a = 10;
-    var b = 20;
+  var a = 1;
+  function bar() {
+    var b = 2;
+    function baz() {
+      var c = 3;
+      console.log(a);
+    }
+    baz();
   }
-  console.log(b);   // 20
-  console.log(a);   // ReferenceError: a is not defined!
+  bar();
 }
+foo(); // 1
 ```
-The reason why `b` is "remembered" is because `b` was never bound to the `LexicalEnvironment`. Instead, it was bound to the Execution Context's `VariableEnvironment`. Pre-ES6, there was no distinction between the two Lexical Environments; however, now, `var` statements are bound to the `VariableEnvironment` for `var`-identifier resolution. This is obviously because `var` is still scoped at the function level.
-
-Again, remember, for __lexically scoped declarations__ (`let` and `const`), identifier resolution allows scope chain lookup as usual _as long as_ the block has not yet been exited (i.e., leaving the current `LexicalEnvironment`). This is why inner blocks can access `let` and `const` declarations outside its block. However, you cannot access declarations _inside a block_ from the outside looking in. 
-
-This is block scope in a nutshell. But `let` and `const` is not done with you just yet. They have particular nuances from `var` outside the block scoping.
-
-##`Let` and `Const` keywords
-Generally speaking, __`let`__ can replace `var` in most cases. In fact, `let` gives greater flexibility in variable declarations because it is scoped _closer_ to the actual operation. For example:
+Next, I will attempt to show identifier resolution in pseudo-code:
 ```javascript
-// using 'var'
-for (var i = 0; i < 10; i++) {
-  ...
+// `foo` invoked
+// creates FooLexicalEnv
+FooLexicalEnv = {
+  a: 1  // foo has the variable `a` in its lexical env
+  outerLexEnv: global
 }
-
-// using 'let'
-for (let j = 0; j < 10; j++) {
-  ...
+// `foo` invokes `bar`
+// creates BarLexicalEnv
+BarLexicalEnv = {
+  b: 2
+  outerLexEnv: FooLexicalEnv
 }
-
-console.log(i); // 10
-console.log(j); // ReferenceError: j is not defined!
-```
-As seen above, since `j` is scoped to the block, you can use `j` elsewhere in your function without consequence to the `for` loop. The reason why you should favor `let` in these use-cases is for the same reason why programmers avoid declaring global variables. This is simply an extension of the [Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege) (i.e., only have access to info as necessary).
-
-__`const`__ is actually a very special keyword introduced with ES6. It creates an __immutable binding__ to a particular value or object. The term "immutable _binding_" is specific because it does not prevent mutations on the object bound to the `const` keyword, but _does_ prevent re-assignment.
-
-See below:
-```javascript
-const a = 10;
-a = 2; // SyntaxError: Assignment to constant variable!
-
-// However, to an object
-const b = [];
-const c = { bar: 10 };
-
-b.push('2');
-c.foo = 20;
-c.bar = 30;
-
-console.log(b); // [ '2' ]
-console.log(c); // { bar: 30, foo: 20 }
-```
-__Note:__ if you need a refresher on why the first example (a = 10 to a = 2) is considered a re-assignment (forbidden) and not a mutation (permissible), check out my previous blog post: [Evaluation Strategy: by value vs. by reference](https://medium.com/@danparkk/javascript-basics-evaluation-strategy-by-value-vs-by-reference-ee681dbaa527).
-
-It is important to distinguish between _true immutability_ (cannot mutate the object) from the immutable _binding_ that `const` gives us to avoid misconceptions. As such, `const` should be used when you know that the assignment/binding is permanent to that block scope (`const` is still a block scoped declaration). If this explanation hasn't made it clear, but `const` _must_ be assigned to something when it is declared (i.e., `const a;` will not work!)
-
-__Now here's the weird part.__
-
-Remember hoisting and its effect on your code?
-Look!
-```javascript
-function foo() {
-  console.log(bar);
-  var bar = 10;
-};
-
-foo(); // undefined
-```
-You will get `undefined` because `bar` is hoisted during the Creation Phase of the Execution Context.
-However, the same code with `let`:
-```javascript
-function foo() {
-  console.log(bar);
-  let bar = 10;
-};
-
-foo(); // ReferenceError: bar is not defined!
-```
-Yeah, yeah, what's going on now. JavaScript doing its thing again. Let me just get this out there: this is not because `let` declarations are not hoisted! In fact, they are hoisted to the top of the block scope. But then why the `ReferenceError`?
-
-Enter the __Temporal Dead Zone__. No really, this is a thing.
-
-##Temporal Dead Zone, TDZ for short
-The naming convention aside, this rule is actually simpler in practice than theory.
-
-In short, it is because of the __temporal dead zone__ that trying to access `let` and `const` statements before they have been declared results in a `ReferenceError`.
-
-The contrast between `var` and `let`/`const` can be seen during the Creation Phase of the Execution Context.
-
-During the Creation Phase:
-* `var` is hoisted then initialized as `undefined`.
-* `let`/`const` is hoisted _but_ is __not__ initialized!
-
-It is only during the Execution Phase where `let`/`const` receive their assignments!
-* `var` is assigned the value (if there is one).
-* `let` is assigned the value (if no value, `undefined`).
-* `const` is assigned the value (but requires the assigned value).
-
-The TDZ is truly a _temporal restriction_ __not__ a lexical restriction. See below:
-```javascript
-function foo () {
-  console.log(bar);
+// `bar` invokes `baz`
+// creates BazLexicalEnv
+BazLexicalEnv = {
+  c: 3;
+  outerLexEnv: BarLexicalEnv
 }
+// `baz`'s scope chain looks like this
+BazLexicalEnv => BarLexicalEnv => FooLexicalEnv => global
+// in contrast, `foo`'s scope chain looks like this
+FooLexicalEnv => global
 
-let bar = 'funny';
-foo();   // 'funny'
-``` 
-Essentially, during the Execution Phase of the Execution Context, when variables are typically assigned their values, the TDZ ends when it reaches the `let`/`const` declaration.
+// `baz` console logs `a`
+// identifier resolution on currentLexEnv, variable, outerLexEnv
+ResolveIdentifier(BazLexicalEnv, a, BarLexicalEnv) // `a` not in BazLexEnv
+ResolveIdentifier(BarLexicalEnv, a, FooLexicalEnv) // `a` not in BarLexEnv
+ResolveIdentifier(FooLexicalEnv, a, global) // `a` found in FooLexicalEnv!
+// `a` is found, it's value (1) is returned, `baz` console logs 1
+```
+As you can see, the check for the identifier propagates outward from the current Lexical Environment until it finds (or does not find) the variable. Also, you can see that the __scope chain__ of each execution context is unique (i.e., the scope chain of `foo`'s EC is different from `baz`'s).
 
-The question now is: why the temporal dead zone?
+__Side note__: It may be confusing to refer to both the "Lexical Environment" (observe the space between the two words) and `LexicalEnvironment` (no space). I wrote this to be consistent with the ECMAScript specs. __Lexical Environment__ is the concept, `LexicalEnvironment` and `VariableEnvironment` are the implementation of that concept.
 
-There are two oft-cited reasons (the second reason more important than the first):
-1. TDZ prevents reliance on hoisting to make code function (poor coding style). It throws errors to alert the programmer to a possible unintended access before declaration situation.
-2. TDZ allows for better semantic reasoning surrounding `const`. Allen Wirfs-Brock, the project editor for ES6, notes, "the motivating feature for TDZs is to provide a rational semantics for `const`. There was significant technical discussion of that topic and TDZs emerged as the best solution." [See Link](https://esdiscuss.org/topic/performance-concern-with-let-const).
+##The Scope Chain/Scope
+I mentioned __scope chain__ multiple times already but it is helpful to fine-tune a definition to deter misconceptions.
+__Definition:__ The __scope chain__ of an execution context is the internal "chain" of Lexical Environments that is traversed during identifier resolution.
 
-The second reason makes sense when you consider what `const` is _supposed_ to do -- that is, create an immutable _binding_. If `const` can only be bound once, then it would not make sense for the `const` variable to follow the "`var` assignment to `undefined`" pattern during the Creation Phase. `const` should not and cannot be bound to `undefined` then later changed to the proper binding!
+__Key takeaways__ 
+First, the scope chain does not exist at author-time (when I write it). It is created when the function is invoked after creating the execution context of that function. This is why I wrote, "The scope chain _of an execution context_..."
+Second, it is read-only (internal) to the machine. Browsers sometimes "expose" this read-only scope chain as `[[Scope]]` but you cannot do anything with it. 
+Lastly, it is a chain of Lexical Environments that is traversed (see Identifier Resolution above).
 
-To maintain consistency, `let` was also affected by TDZ though `let` does not "require" TDZ to maintain semantic rationale.
+It is a lot simpler in practice than to know what is actually happening under the hood.
 
-##Conclusion
-There are many interesting consequences of ES6 that affect identifier resolution and scope. Particularly with the introduction of block scoping through the `let` and `const` keywords, identifier resolution through the Lexical Environments are more nuanced than before. It is important to keep up with these changes to understand some errors that may be thrown as a result of misconceptions of block scope.
+Finally, you might be wondering if there's a difference between __scope chain__ and __scope__. The short answer is that the two are the same thing. There is just a minor, truly inconsequential difference conceptually. __Scope__ refers to the abstract concept of the execution context's "reach" (I'm grasping for words here -- I want to use "scope") for identifier resolution. __Scope chain__ is just the implementation of that concept in JavaScript. Basically, it is the same thing. __Scope__ just defines what it is, __scope chain__ gives it a name.
 
-Again, my hope is to communicate a more digestable block of text than the formulaic script of the ECMAScript specifications. I plan on covering more React/Redux posts in the future as well. I don't plan on departing from the hole that is the ECMAScript docs forever, but it may be good to change things up!
+##The future is now (ES6)!
+
+Before ES6, checking the `LexicalEnvironment` for identifier resolution accomplished identifier resolution. But with the advent of block scoping (using the `let` and `const` keywords), a not-so-small nuance was added on top of this. [See my blog post on block scope for more details on that]
+
+Because ES6 is now the standard in JS development, `let` and `const` is important to understand. `var` won't go away anytime soon (mostly because legacy code), but it's important to keep up!
 
 __Read more:__
-* [ES6: Let and Const Declarations](https://www.ecma-international.org/ecma-262/7.0/#sec-declarations-and-the-variable-statement)
-* [Let, Const, and Temporal Dead Zone in Depth](https://ponyfoo.com/articles/es6-let-const-and-temporal-dead-zone-in-depth)
-* [You Don't Know JS: Function vs. Block Scope](https://github.com/getify/You-Dont-Know-JS/blob/master/scope%20%26%20closures/ch3.md)
 * [Variables and Scoping](http://2ality.com/2015/02/es6-scoping.html)
+* [ECMAScript: GetIdentifierReference](https://www.ecma-international.org/ecma-262/7.0/#sec-getidentifierreference)
+* [ECMAScript: ResolveBinding](https://www.ecma-international.org/ecma-262/7.0/#sec-resolvebinding)
+Still relevant, but now "outdated" terminology describing the Lexical Environment as an activation object:
+* [Identifier Resolution and Closures in the JavaScript Scope Chain](http://davidshariff.com/blog/javascript-scope-chain-and-closures/)
